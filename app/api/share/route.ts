@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "共有結果を取得できません。" }, { status: 400 });
     }
     const response = await fetch(`${url}/rest/v1/diagnoses?diagnosis_id=eq.${encodeURIComponent(id)}&select=diagnosis_id,main_type,scores,ability`, {
-      headers: { apikey: key }, next: { revalidate: 60 },
+      headers: { apikey: key, Authorization: `Bearer ${key}` }, next: { revalidate: 60 },
     });
     const [row] = await response.json();
     if (!response.ok || !row) return NextResponse.json({ error: "共有結果が見つかりません。" }, { status: 404 });
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     const id = crypto.randomUUID();
     const response = await fetch(`${url}/rest/v1/diagnoses`, {
       method: "POST",
-      headers: { apikey: key, "Content-Type": "application/json", Prefer: "return=minimal" },
+      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", Prefer: "return=minimal" },
       body: JSON.stringify({ diagnosis_id: id, main_type: mainType, scores, personality: null, ability: body.ability, ability_rating: body.ability.rating }),
     });
     if (!response.ok) throw new Error("Supabase insert failed");
