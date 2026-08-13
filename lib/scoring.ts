@@ -1,0 +1,3 @@
+import { questions } from "./questions"; import { AuraType, Scores, TYPES } from "./types";
+export function calculateScores(answers:string[]): Scores { const raw = Object.fromEntries(TYPES.map(t=>[t,0])) as Scores; answers.forEach((id,idx)=>{ const answer=questions[idx]?.options.find(o=>o.id===id); if(answer) TYPES.forEach(t=>raw[t]+=answer.scores[t]);}); const max=Math.max(...TYPES.map(t=>raw[t]),1); return Object.fromEntries(TYPES.map(t=>[t,Math.round(35+(raw[t]/max)*60)])) as Scores; }
+export function rankTypes(scores:Scores): AuraType[]{return [...TYPES].sort((a,b)=>scores[b]-scores[a] || TYPES.indexOf(a)-TYPES.indexOf(b));}

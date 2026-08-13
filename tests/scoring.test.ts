@@ -1,0 +1,2 @@
+import { describe,it,expect } from "vitest"; import { calculateScores,rankTypes } from "../lib/scoring"; import { TYPES } from "../lib/types";
+describe("scoring",()=>{it("returns a stable score for every type",()=>{const answers=Array(12).fill("a");expect(calculateScores(answers)).toEqual(calculateScores(answers));expect(Object.keys(calculateScores(answers))).toEqual(TYPES)});it("uses declared type order for a tie",()=>{const scores=Object.fromEntries(TYPES.map(t=>[t,50])) as any;expect(rankTypes(scores)[0]).toBe("強化系")})})
