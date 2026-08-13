@@ -1,7 +1,56 @@
-import { NextRequest,NextResponse } from "next/server"; import { validDiagnosis } from "../../../lib/server"; import { TYPES } from "../../../lib/types";
+import { NextRequest, NextResponse } from "next/server";
+import { validDiagnosis } from "../../../lib/server";
+import { TYPES } from "../../../lib/types";
+
 export const dynamic = "force-dynamic";
-const runtimeEnv = process.env;
-const supabaseUrl = runtimeEnv["SUPABASE_URL"] || runtimeEnv["NEXT_PUBLIC_SUPABASE_URL"];
-const supabaseKey = runtimeEnv["SUPABASE_SERVICE_ROLE_KEY"] || runtimeEnv["SUPABASE_SECRET_KEY"];
-export async function GET(req: NextRequest) { try { const id = req.nextUrl.searchParams.get("id"); if (!id || !supabaseUrl || !supabaseKey) return NextResponse.json({ error: "共有結果を取得できません。" }, { status: 400 }); const response = await fetch(`${supabaseUrl}/rest/v1/diagnoses?diagnosis_id=eq.${encodeURIComponent(id)}&select=diagnosis_id,main_type,scores,ability`, { headers: { apikey: supabaseKey }, next: { revalidate: 60 } }); const [row] = await response.json(); if (!response.ok || !row) return NextResponse.json({ error: "共有結果が見つかりません。" }, { status: 404 }); return NextResponse.json({ id: row.diagnosis_id, mainType: row.main_type, scores: row.scores, ability: row.ability }); } catch { return NextResponse.json({ error: "共有結果を取得できません。" }, { status: 500 }); } }
-export async function POST(req:NextRequest){try{const body=await req.json();if(!body?.ability||!TYPES.includes(body.ability.type))return NextResponse.json({error:"Invalid share data"},{status:400});if(!supabaseUrl||!supabaseKey)return NextResponse.json({error:"共有機能を有効にするにはSupabaseを設定してください。"},{status:503});const diagnosis=validDiagnosis(body?.diagnosis)?body.diagnosis:null,mainType=diagnosis?.mainType??body.ability.type,scores=diagnosis?.scores??Object.fromEntries(TYPES.map(type=>[type,type===mainType?100:40]));const id=crypto.randomUUID();const r=await fetch(`${supabaseUrl}/rest/v1/diagnoses`,{method:"POST",headers:{apikey:supabaseKey,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify({diagnosis_id:id,main_type:mainType,scores,personality:null,ability:body.ability,ability_rating:body.ability.rating})});if(!r.ok)throw Error();return NextResponse.json({id})}catch{return NextResponse.json({error:"共有リンクを作成できませんでした。"},{status:500})}}
+
+function getSupabaseConfig() {
+  return {
+    url: process.env["SUPABASE_URL"] || process.env["NEXT_PUBLIC_SUPABASE_URL"],
+    key: process.env["SUPABASE_SERVICE_ROLE_KEY"] || process.env["SUPABASE_SECRET_KEY"],
+  };
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { url, key } = getSupabaseConfig();
+    const id = request.nextUrl.searchParams.get("id");
+    if (!id || !url || !key) {
+      return NextResponse.json({ error: "共有結果を取得できません。" }, { status: 400 });
+    }
+    const response = await fetch(`${url}/rest/v1/diagnoses?diagnosis_id=eq.${encodeURIComponent(id)}&select=diagnosis_id,main_type,scores,ability`, {
+      headers: { apikey: key }, next: { revalidate: 60 },
+    });
+    const [row] = await response.json();
+    if (!response.ok || !row) return NextResponse.json({ error: "共有結果が見つかりません。" }, { status: 404 });
+    return NextResponse.json({ id: row.diagnosis_id, mainType: row.main_type, scores: row.scores, ability: row.ability });
+  } catch {
+    return NextResponse.json({ error: "共有結果を取得できません。" }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { url, key } = getSupabaseConfig();
+    if (!body?.ability || !TYPES.includes(body.ability.type)) {
+      return NextResponse.json({ error: "Invalid share data" }, { status: 400 });
+    }
+    if (!url || !key) {
+      return NextResponse.json({ error: "共有機能を有効にするにはSupabaseを設定してください。" }, { status: 503 });
+    }
+    const diagnosis = validDiagnosis(body.diagnosis) ? body.diagnosis : null;
+    const mainType = diagnosis?.mainType ?? body.ability.type;
+    const scores = diagnosis?.scores ?? Object.fromEntries(TYPES.map((type) => [type, type === mainType ? 100 : 40]));
+    const id = crypto.randomUUID();
+    const response = await fetch(`${url}/rest/v1/diagnoses`, {
+      method: "POST",
+      headers: { apikey: key, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ diagnosis_id: id, main_type: mainType, scores, personality: null, ability: body.ability, ability_rating: body.ability.rating }),
+    });
+    if (!response.ok) throw new Error("Supabase insert failed");
+    return NextResponse.json({ id });
+  } catch {
+    return NextResponse.json({ error: "共有リンクを作成できませんでした。" }, { status: 500 });
+  }
+}
