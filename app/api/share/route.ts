@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 function getSupabaseConfig() {
   return {
     url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
-    key: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY,
+    key: process.env.SUPABASE_LEGACY_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY,
   };
 }
 
@@ -49,11 +49,10 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({ diagnosis_id: id, main_type: mainType, scores, personality: null, ability: body.ability, ability_rating: body.ability.rating }),
     });
     if (!response.ok) {
-      const detail = await response.text();
-      return NextResponse.json({ error: "共有リンクを作成できませんでした。", supabaseStatus: response.status, detail }, { status: 502 });
+      return NextResponse.json({ error: "共有リンクを作成できませんでした。" }, { status: 502 });
     }
     return NextResponse.json({ id });
-  } catch (error) {
-    return NextResponse.json({ error: "共有リンクを作成できませんでした。", detail: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "共有リンクを作成できませんでした。" }, { status: 500 });
   }
 }
