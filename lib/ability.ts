@@ -1,8 +1,18 @@
 import { AuraType, Scores, TYPES } from "./types";
 
+export type Rarity = "COMMON" | "RARE" | "EPIC" | "LEGENDARY";
+
+export const RARITY_LABELS: Record<Rarity, string> = {
+  COMMON: "コモン",
+  RARE: "レア",
+  EPIC: "エピック",
+  LEGENDARY: "レジェンダリー",
+};
+
 export type Ability = {
   abilityName: string;
   type: AuraType;
+  rarity: Rarity;
   shortDescription: string;
   description: string;
   activation: string;
@@ -99,13 +109,24 @@ function pickPattern(type: AuraType, scores: Scores): AbilityPattern {
   return group[(Date.now() + scoreSeed) % group.length];
 }
 
+function pickRarity(scores: Scores): Rarity {
+  const seed = (Date.now() + Object.values(scores).reduce((total, score) => total + score, 0)) % 100;
+  if (seed < 5) return "LEGENDARY";
+  if (seed < 20) return "EPIC";
+  if (seed < 50) return "RARE";
+  return "COMMON";
+}
+
 export function fallbackAbility(type: AuraType, scores: Scores): Ability {
   const base = pickPattern(type, scores);
   const [abilityName, shortDescription, activation, restriction, weakness, rating] = base;
-  const [attack, defense, versatility, difficulty, growth] = rating;
+  const rarity = pickRarity(scores);
+  const boost = { COMMON: 0, RARE: 3, EPIC: 7, LEGENDARY: 12 }[rarity];
+  const [attack, defense, versatility, difficulty, growth] = rating.map((value) => Math.min(99, value + boost)) as [number, number, number, number, number];
   return {
     abilityName,
     type,
+    rarity,
     shortDescription,
     description: `${shortDescription}能力です。戦闘では、状況を作る・距離を取る・相手の行動を限定するために役立ちます。万能ではなく、発動条件と制限を守れない場面では使えません。`,
     activation,
@@ -114,6 +135,6 @@ export function fallbackAbility(type: AuraType, scores: Scores): Ability {
     weakness,
     strengths: ["条件を満たせば効果が分かりやすい", "戦い方に個性を出しやすい", "共闘時にも役割を作りやすい"],
     rating: { attack, defense, versatility, difficulty, growth },
-    reason: `診断で表れた${type}の傾向を、扱いやすく戦闘にも活かせる一つの能力にしました。`,
+    reason: `診断で表れた${type}の傾向を、扱いやすく戦闘にも活かせる一つの能力にしました。レアリティは${RARITY_LABELS[rarity]}です。`,
   };
 }
