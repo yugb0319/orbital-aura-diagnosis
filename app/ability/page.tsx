@@ -15,8 +15,8 @@ export default function AbilityPage() {
   const [error, setError] = useState(false);
   const [message, setMessage] = useState("");
   const generate = async () => {
-    setError(false); const diagnosis = sessionStorage.getItem("orbital-result"); if (!diagnosis) return;
-    try { const response = await fetch("/api/generate-ability", { method: "POST", headers: { "Content-Type": "application/json" }, body: diagnosis }); if (!response.ok) throw new Error(); const data = await response.json(); setAbility(data.ability); sessionStorage.setItem("orbital-ability", JSON.stringify(data.ability)); } catch { setError(true); }
+    setError(false); const diagnosis = sessionStorage.getItem("orbital-result"); if (!diagnosis) { setMessage("診断結果がこの端末にありません。診断を完了してから能力を再生成できます。"); return; }
+    try { const response = await fetch("/api/generate-ability", { method: "POST", headers: { "Content-Type": "application/json" }, body: diagnosis }); if (!response.ok) throw new Error(); const data = await response.json(); setAbility(data.ability); sessionStorage.setItem("orbital-ability", JSON.stringify(data.ability)); setMessage("新しい能力を生成しました。"); } catch { setError(true); setMessage("能力を再生成できませんでした。少し待ってから再度お試しください。"); }
   };
   const download = async () => {
     if (!ability) return; const canvas = document.createElement("canvas"); canvas.width = 1080; canvas.height = 1350; const ctx = canvas.getContext("2d")!;
