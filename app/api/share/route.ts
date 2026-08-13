@@ -1,4 +1,5 @@
 import { NextRequest,NextResponse } from "next/server"; import { validDiagnosis } from "../../../lib/server"; import { TYPES } from "../../../lib/types";
+export const dynamic = "force-dynamic";
 const runtimeEnv = process.env;
 const supabaseUrl = runtimeEnv["SUPABASE_URL"] || runtimeEnv["NEXT_PUBLIC_SUPABASE_URL"];
 const supabaseKey = runtimeEnv["SUPABASE_SERVICE_ROLE_KEY"] || runtimeEnv["SUPABASE_SECRET_KEY"];
