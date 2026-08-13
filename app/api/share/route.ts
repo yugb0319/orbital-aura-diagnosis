@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid share data" }, { status: 400 });
     }
     if (!url || !key) {
-      return NextResponse.json({ error: "共有機能を有効にするにはSupabaseを設定してください。" }, { status: 503 });
+      return NextResponse.json({ error: "共有機能を有効にするにはSupabaseを設定してください。", configuration: { url: Boolean(url), key: Boolean(key) } }, { status: 503 });
     }
     const diagnosis = validDiagnosis(body.diagnosis) ? body.diagnosis : null;
     const mainType = diagnosis?.mainType ?? body.ability.type;
