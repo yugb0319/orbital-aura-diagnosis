@@ -3,8 +3,8 @@ import { TYPES } from "../../../../lib/types";
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) return NextResponse.json({ error: "共有機能の設定がまだ完了していません。" }, { status: 503 });
   const response = await fetch(`${url}/rest/v1/diagnoses?diagnosis_id=eq.${encodeURIComponent(id)}&select=diagnosis_id,main_type,scores,ability`, {
     headers: { apikey: key },
