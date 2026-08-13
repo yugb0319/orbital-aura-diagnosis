@@ -48,9 +48,12 @@ export async function POST(request: NextRequest) {
       headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", Prefer: "return=minimal" },
       body: JSON.stringify({ diagnosis_id: id, main_type: mainType, scores, personality: null, ability: body.ability, ability_rating: body.ability.rating }),
     });
-    if (!response.ok) throw new Error("Supabase insert failed");
+    if (!response.ok) {
+      const detail = await response.text();
+      return NextResponse.json({ error: "共有リンクを作成できませんでした。", supabaseStatus: response.status, detail }, { status: 502 });
+    }
     return NextResponse.json({ id });
-  } catch {
-    return NextResponse.json({ error: "共有リンクを作成できませんでした。" }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: "共有リンクを作成できませんでした。", detail: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
   }
 }
