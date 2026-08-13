@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({ diagnosis_id: id, main_type: mainType, scores, personality: null, ability: body.ability, ability_rating: body.ability.rating }),
     });
     if (!response.ok) {
-      return NextResponse.json({ error: "共有リンクを作成できませんでした。" }, { status: 502 });
+      return NextResponse.json({ error: "共有リンクを作成できませんでした。", upstreamStatus: response.status }, { status: 502 });
     }
     return NextResponse.json({ id });
   } catch {
